@@ -134,16 +134,6 @@ Open `http://localhost:4173` → Select `gccc/global_crisis_command_center`
 
 ---
 
-## 🔑 Environment Variables
-
-```env
-GITHUB_TOKEN=your_github_personal_access_token
-```
-
-> **Note:** `.env` is gitignored. Never commit your token.
-
----
-
 ## 📊 Token Usage Summary
 
 | Test | Tokens | Cost |
