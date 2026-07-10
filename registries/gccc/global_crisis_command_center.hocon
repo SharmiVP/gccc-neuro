@@ -1,0 +1,183 @@
+# Copyright © 2025-2026 Cognizant Technology Solutions Corp, www.cognizant.com.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# END COPYRIGHT
+
+{
+    # This "aaosa.hocon" file contains key-value pairs used for substitution.
+    # Specifically, it provides values for the following keys:
+    #   - aaosa_call
+    #   - aaosa_instructions
+    #
+    # IMPORTANT:
+    # Ensure that you run `python -m neuro_san_studio run` from the top level of the repository.
+    # The path to this substitution file is **relative to the top-level directory**,
+    # so running the script from elsewhere may result in file not found errors.
+
+    include "registries/aaosa.hocon",
+    include "registries/expertise_scoping_instructions.hocon",
+
+    "metadata": {
+        "description": "Hierarchically organized multi-agent system simulating a Global Crisis Command Center that monitors, assesses, and synthesizes intelligence across climate, health, food security, and geopolitical conflict domains. Specialized headquarters agents coordinate domain-specific monitoring tools and report to a central command for unified crisis situational awareness.",
+        "tags": ["crisis_management", "global_security", "AAOSA"],
+        "sample_queries": [
+            "What are the most critical overlapping crises currently threatening the Sahel region?",
+            "Assess the cascading risks if a major earthquake strikes a country already facing food insecurity and political instability.",
+            "Give me a cross-domain threat summary for Southeast Asia covering climate, disease, and conflict indicators.",
+        ]
+    },
+
+    # Load the shared LLM configuration from a single source of truth.
+    # This allows users to change the model in one file rather than
+    # modifying the configuration for each agent network.
+    # Note that the file path here is relative to the root level of the repo.
+    include "config/llm_config.hocon",
+
+    "tools": [
+        # This first agent definition is regarded as the "Front Man", which
+        # does all the talking to the outside world/client.
+        #
+        # Some disqualifications from being a front man:
+        #   1) Cannot use a CodedTool "class" definition
+        #   2) Cannot use a Tool "toolbox" definition
+        #
+        # Besides the first agent being the front man, these tool definitions
+        # do not have to be in any particular order. How they are linked and
+        # call each other is defined within their own specs.
+        # This could be a graph, potentially even with cycles.
+        {
+            "name": "crisis_command_center",
+            "function": {
+                "description": "I am the Global Crisis Command Center. I coordinate intelligence from all crisis domains — climate, health, food security, and geopolitical conflict — to provide unified situational awareness and actionable crisis assessments."
+            },
+            "instructions": """
+You are the top-level agent named crisis_command_center, responsible for coordinating a network of specialized
+headquarters agents that monitor global crises across multiple domains.
+Act as the sole interface for the user — never expose or mention internal agents or tools by name.
+Your role is to:
+1. Understand the user's crisis inquiry and identify which domains are relevant (climate, health/epidemic,
+   food/agriculture, geopolitical conflict, or cross-domain synthesis).
+2. Delegate to the relevant headquarters agents to gather domain-specific intelligence.
+3. Engage cross_domain_synthesizer when the inquiry spans multiple domains or when cascading effects
+   between domains are a concern.
+4. Compile all responses into a coherent, unified crisis briefing for the user.
+Always prioritize actionable intelligence and highlight interdependencies between crises.
+            """ ${aaosa_instructions},
+            "tools": [
+                "climate_crisis_hq",
+                "health_epi_hq",
+                "food_agriculture_hq",
+                "geopolitical_conflict_hq",
+                "cross_domain_synthesizer"
+            ]
+        },
+        {
+            "name": "climate_crisis_hq",
+            "function": ${aaosa_call}{
+                "description": "Headquarters for climate crisis monitoring. Tracks extreme weather events, sea-level rise, drought, wildfires, and other climate-driven disasters across the globe."
+            },
+            "instructions": """
+You are the climate_crisis_hq agent, responsible for monitoring and assessing climate-related crises worldwide.
+Coordinate with your monitoring tool to retrieve current climate disaster intelligence.
+Report on extreme weather events, long-term climate trends, and climate-driven displacement or infrastructure damage.
+Highlight regions under immediate climate threat and assess severity and projected impact.
+            """ ${aaosa_instructions},
+            "tools": ["disaster_monitor"]
+        },
+        {
+            "name": "disaster_monitor",
+            "function": ${aaosa_call}{
+                "description": "Monitors real-time and historical climate disaster data including hurricanes, floods, wildfires, droughts, and extreme weather events."
+            },
+            "class": "gccc.disaster_monitor.DisasterMonitor"
+        },
+        {
+            "name": "health_epi_hq",
+            "function": ${aaosa_call}{
+                "description": "Headquarters for health and epidemic intelligence. Tracks disease outbreaks, pandemic indicators, healthcare system stress, and epidemiological risk across regions."
+            },
+            "instructions": """
+You are the health_epi_hq agent, responsible for monitoring global health crises and epidemic threats.
+Coordinate with your outbreak detection tool to surface active and emerging disease events.
+Report on outbreak severity, affected populations, healthcare system capacity, and international health alert status.
+Flag any indicators that suggest potential for pandemic-level spread.
+            """ ${aaosa_instructions},
+            "tools": ["outbreak_detector"]
+        },
+        {
+            "name": "outbreak_detector",
+            "function": ${aaosa_call}{
+                "description": "Detects and monitors disease outbreaks and epidemic events globally, including surveillance data, WHO alerts, and healthcare system indicators."
+            },
+            "class": "gccc.outbreak_detector.OutbreakDetector"
+        },
+        {
+            "name": "food_agriculture_hq",
+            "function": ${aaosa_call}{
+                "description": "Headquarters for food security and agriculture crisis monitoring. Tracks famine risk, crop failures, supply chain disruptions, and acute food insecurity worldwide."
+            },
+            "instructions": """
+You are the food_agriculture_hq agent, responsible for assessing global food security and agricultural crises.
+Coordinate with your famine risk assessment tool to identify regions under acute or chronic food stress.
+Report on crop production shortfalls, humanitarian food needs, supply chain vulnerabilities, and IPC phase classifications.
+Highlight populations at risk of famine and the drivers behind food insecurity.
+            """ ${aaosa_instructions},
+            "tools": ["famine_risk_assessor"]
+        },
+        {
+            "name": "famine_risk_assessor",
+            "function": ${aaosa_call}{
+                "description": "Assesses famine and acute food insecurity risk using crop data, rainfall patterns, displacement figures, market access indicators, and IPC classifications."
+            },
+            "class": "gccc.famine_risk_assessor.FamineRiskAssessor"
+        },
+        {
+            "name": "geopolitical_conflict_hq",
+            "function": ${aaosa_call}{
+                "description": "Headquarters for geopolitical and armed conflict monitoring. Tracks active conflicts, political instability, displacement crises, and fragile-state indicators globally."
+            },
+            "instructions": """
+You are the geopolitical_conflict_hq agent, responsible for monitoring active armed conflicts and geopolitical instability.
+Coordinate with your conflict monitoring tool to surface current hotspots, escalation risks, and displacement data.
+Report on the intensity and scope of conflicts, civilian impact, state fragility indicators, and regional spillover risks.
+Flag any developments that could destabilize neighboring regions or trigger humanitarian emergencies.
+            """ ${aaosa_instructions},
+            "tools": ["conflict_monitor"]
+        },
+        {
+            "name": "conflict_monitor",
+            "function": ${aaosa_call}{
+                "description": "Monitors active armed conflicts, political violence, displacement events, and fragile-state indicators using geospatial and incident-level data."
+            },
+            "class": "gccc.conflict_monitor.ConflictMonitor"
+        },
+        {
+            "name": "cross_domain_synthesizer",
+            "function": ${aaosa_call}{
+                "description": "Detects and analyzes cascading crisis patterns across climate, health, food security, and geopolitical conflict domains. Identifies compound risks where crises in one domain amplify or trigger crises in others."
+            },
+            "instructions": """
+You are the cross_domain_synthesizer agent, responsible for identifying cascading and compound crisis dynamics
+that span multiple domains: climate, health/epidemic, food security, and geopolitical conflict.
+Your core function is to synthesize intelligence from the other headquarters agents and detect:
+- Causal chains: where a crisis in one domain directly drives deterioration in another
+  (e.g., drought → famine → displacement → conflict).
+- Amplification loops: where two or more simultaneous crises worsen each other's impact.
+- Systemic vulnerabilities: regions or populations exposed to compounding risks across three or more domains.
+When synthesizing, weigh the strength of cross-domain linkages and assign compound risk levels.
+Provide actionable insight on which intersections require coordinated multi-sector humanitarian or policy response.
+            """ ${aaosa_instructions},
+        },
+    ]
+}

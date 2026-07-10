@@ -13,12 +13,18 @@
 # limitations under the License.
 #
 # END COPYRIGHT
-
-# Custom LLM config using GHCP as the default LLM.
-# GHCP (GitHub Copilot) is set as the primary provider.
 {
-    "llm_config": {
-        "class": "ghcp",
-        "model_name": "gpt-4o-mini"
-    }
+    # Refer to this document for neuro-san specifications for the agent manifest.hocon file 
+    # that is used as configuration for neuro-san servers
+    # https://github.com/cognizant-ai-lab/neuro-san/blob/main/docs/manifest_hocon_reference.md
+
+    #
+    # GCCC (Global Crisis Command Center) use cases
+    #
+    "gccc/global_crisis_command_center.hocon": true,
+    "gccc/climate_crisis_hq.hocon": true,
+    "gccc/health_epi_hq.hocon": true,
+    "gccc/food_agriculture_hq.hocon": true,
+    "gccc/geopolitical_conflict_hq.hocon": true,
+    "gccc/cross_domain_synthesizer.hocon": true,
 }

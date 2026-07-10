@@ -35,6 +35,9 @@
     # Generated agent networks
     include "registries/generated/manifest.hocon",
 
+    # GCCC (Global Crisis Command Center)
+    include "registries/gccc/manifest.hocon",
+
     # Currently we list each hocon file we want to serve as a key with a boolean value.
     # Eventually we might have a dictionary value with server specifications for each.
 
@@ -87,7 +90,7 @@
     # Additional setup for running the "NsflowSelenium" coded tool:
     # - Start the nsflow service in a separate terminal.
     # - Use non-default ports for the neuro-san HTTP and nsflow servers.
-    #   The default ports are 8080 for HTTP and 4173 for nsflow.
+    #   The default ports are 8080 for HTTP and 4174 for nsflow.
     #   For example, you can run:
     #     python -m neuro_san_studio run --server-http-port 8081 --nsflow-port 4174
     "agent_network_architect.hocon": false,
